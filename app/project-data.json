@@ -1,0 +1,39 @@
+{
+  "projects": [
+    {
+      "name": "Contributor Hub",
+      "owner": "Mona Patel",
+      "status": "On track",
+      "recentActivity": "Published the contributor onboarding draft and opened it for review.",
+      "priority": "High"
+    },
+    {
+      "name": "Release Notes Refresh",
+      "owner": "Diego Morales",
+      "status": "In progress",
+      "recentActivity": "Grouped the latest feedback into three themes for the next release.",
+      "priority": "Medium"
+    },
+    {
+      "name": "Accessibility Sweep",
+      "owner": "Avery Chen",
+      "status": "Needs attention",
+      "recentActivity": "Found two keyboard-navigation issues and added fixes to the current sprint.",
+      "priority": "High"
+    },
+    {
+      "name": "Community Events",
+      "owner": "Leila Okafor",
+      "status": "Planning",
+      "recentActivity": "Shortlisted venues and shared a draft calendar with regional leads.",
+      "priority": "Low"
+    },
+    {
+      "name": "Design System Docs",
+      "owner": "Samir Shah",
+      "status": "On track",
+      "recentActivity": "Added usage guidance for the new notification and empty-state patterns.",
+      "priority": "Medium"
+    }
+  ]
+}

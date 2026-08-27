@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A quick view of project health, ownership, and recent activity.">
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <p class="eyebrow">Team workspace</p>
+        <h1>Project Pulse</h1>
+        <p class="intro">A clear, current view of what the team is moving forward.</p>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <section class="dashboard-heading" aria-labelledby="projects-heading">
+        <div>
+          <p class="eyebrow">Portfolio overview</p>
+          <h2 id="projects-heading">Projects in motion</h2>
+        </div>
+        <p id="project-count" class="project-count" aria-live="polite">Loading projects…</p>
+      </section>
+
+      <section id="project-region" aria-labelledby="projects-heading">
+        <div id="loading-state" class="state-card" aria-live="polite">
+          <span class="loading-indicator" aria-hidden="true"></span>
+          <p>Loading the latest project pulse…</p>
+        </div>
+        <div id="error-state" class="state-card error-state" role="alert" hidden>
+          <h3>Projects could not be loaded</h3>
+          <p id="error-message">Please check the data source and try again.</p>
+          <button id="retry-button" type="button">Retry</button>
+        </div>
+        <div id="empty-state" class="state-card" hidden>
+          <h3>No projects to show yet</h3>
+          <p>When a project is added to the shared data, it will appear here.</p>
+        </div>
+        <div id="project-list" class="project-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        const requiredFields = ["name", "owner", "status", "recentActivity", "priority"];
+        const loadingState = document.getElementById("loading-state");
+        const errorState = document.getElementById("error-state");
+        const emptyState = document.getElementById("empty-state");
+        const projectList = document.getElementById("project-list");
+        const projectCount = document.getElementById("project-count");
+        const errorMessage = document.getElementById("error-message");
+        const retryButton = document.getElementById("retry-button");
+
+        function showState(state) {
+          loadingState.hidden = state !== "loading";
+          errorState.hidden = state !== "error";
+          emptyState.hidden = state !== "empty";
+          projectList.hidden = state !== "success";
+        }
+
+        function addText(parent, className, text) {
+          const element = document.createElement("p");
+          element.className = className;
+          element.textContent = text;
+          parent.appendChild(element);
+          return element;
+        }
+
+        function createProjectCard(project) {
+          const card = document.createElement("article");
+          card.className = "project-card";
+
+          const title = document.createElement("h3");
+          title.textContent = project.name;
+          card.appendChild(title);
+
+          const owner = document.createElement("p");
+          owner.className = "owner";
+          const ownerLabel = document.createElement("span");
+          ownerLabel.textContent = "Owner";
+          owner.appendChild(ownerLabel);
+          const ownerName = document.createElement("strong");
+          ownerName.textContent = project.owner;
+          owner.append(" ", ownerName);
+          card.appendChild(owner);
+
+          const badgeRow = document.createElement("div");
+          badgeRow.className = "badge-row";
+          const status = document.createElement("span");
+          status.className = "badge status-badge";
+          status.textContent = "Status: " + project.status;
+          badgeRow.appendChild(status);
+          const priority = document.createElement("span");
+          priority.className = "badge priority-badge";
+          priority.textContent = "Priority: " + project.priority;
+          badgeRow.appendChild(priority);
+          card.appendChild(badgeRow);
+
+          const activityLabel = document.createElement("h4");
+          activityLabel.textContent = "Recent activity";
+          card.appendChild(activityLabel);
+          addText(card, "activity", project.recentActivity);
+          return card;
+        }
+
+        function validateProjects(data) {
+          if (!data || !Array.isArray(data.projects)) {
+            throw new Error("The data must contain a projects array.");
+          }
+          const incompleteIndex = data.projects.findIndex((project) =>
+            !project || requiredFields.some((field) =>
+              typeof project[field] !== "string" || project[field].trim() === ""));
+          if (incompleteIndex !== -1) {
+            throw new Error("Project " + (incompleteIndex + 1) + " is missing required information.");
+          }
+          return data.projects;
+        }
+
+        async function loadProjects() {
+          showState("loading");
+          projectCount.textContent = "Loading projects…";
+          try {
+            const response = await fetch("project-data.json", { cache: "no-store" });
+            if (!response.ok) {
+              throw new Error("The data source returned HTTP " + response.status + ".");
+            }
+            const projects = validateProjects(await response.json());
+            projectList.replaceChildren();
+            projects.forEach((project) => projectList.appendChild(createProjectCard(project)));
+            projectCount.textContent = projects.length + (projects.length === 1 ? " project" : " projects");
+            showState(projects.length ? "success" : "empty");
+          } catch (error) {
+            projectCount.textContent = "Unable to load projects";
+            errorMessage.textContent = error instanceof SyntaxError
+              ? "The project data is not valid JSON."
+              : error.message;
+            showState("error");
+            retryButton.focus();
+          }
+        }
+
+        retryButton.addEventListener("click", loadProjects);
+        loadProjects();
+      })();
+    </script>
+  </body>
+</html>
